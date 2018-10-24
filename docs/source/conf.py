@@ -176,3 +176,18 @@ epub_exclude_files = ['search.html']
 
 
 # -- Extension configuration -------------------------------------------------
+
+# -- Auto-build API documentation --------------------------------------------
+
+def run_apidoc(_):
+    from sphinx.apidoc import main as apidoc_main
+    modules = []
+    cur_dir = os.path.abspath(os.path.dirname(__file__))
+    output_path = cur_dir
+    source_dir = os.path.abspath(os.path.join(cur_dir, '..', '..', 'lib', 'intercom_test'))
+    apidoc_args = ['sphinx-apidoc', '-e', '-f', '-o', output_path, source_dir]
+    print("Running: sphinx-apidoc " + ' '.join(apidoc_args))
+    apidoc_main(apidoc_args)
+
+def setup(app):
+    app.connect('builder-inited', run_apidoc)
