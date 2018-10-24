@@ -16,7 +16,7 @@
 
 The main functionality of this package is accessible through
 :class:`.InterfaceCaseProvider`.  :class:`.CaseAugmenter` and it's predefined
-subclasses, typically necessary for testing _service provider_ code, are also
+subclasses, typically necessary for testing *service provider* code, are also
 available from this module.  These classes come from :mod:`.framework` but are
 imported into the base namespace of this package for ease of use.
 
