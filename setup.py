@@ -20,6 +20,7 @@ with open("README.md", "r") as readme:
 setup(
     name='intercom_test',
     version='1.0dev',
+    package_dir={'': 'lib'},
     packages=find_packages('lib'),
     use_2to3=False,
     description='Inter-component testing support code for "Interface By Example"',
