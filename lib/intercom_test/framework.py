@@ -53,6 +53,8 @@ class InterfaceCaseProvider:
       augmentation data files is desired)
     * Merge extension test case files to the main test case file
     * Other case augmentation management tasks
+    
+    .. automethod:: __init__
     """
     class _UpdateState(Enum):
         not_requested   = '-'
@@ -287,6 +289,8 @@ class CaseAugmenter:
     this class's functionality, derive from it and define this constant in
     the subclass.  Two basic subclasses are defined in this module:
     :class:`HTTPCaseAugmenter` and :class:`RPCCaseAugmenter`.
+    
+    .. automethod:: __init__
     """
     UPDATE_FILE_EXT = ".update" + YAML_EXT
     

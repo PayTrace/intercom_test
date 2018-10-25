@@ -13,10 +13,19 @@ Welcome to intercom_test's documentation!
    modules
 
 
-Getting Started
-===============
+Using This Package
+==================
 
-Please see the documentation for :py:mod:`intercom_test`.
+:py:mod:`intercom_test` provides :py:class:`~intercom_test.framework.InterfaceCaseProvider`
+to iterate over test cases defined in YAML files.  With the additional use of a
+*case_augmenter* -- either an :py:class:`~intercom_test.framework.HTTPCaseAugmenter`,
+a :py:class:`~intercom_test.framework.RPCCaseAugmenter`, or your own class
+derived from :py:class:`~intercom_test.framework.CaseAugmenter` -- the
+:py:class:`~intercom_test.framework.InterfaceCaseProvider` can add more data
+from a different directory to any test case; this supports decoupling a *service
+provider's* implementation details necessary to passing the given test case from
+the request and response information needed by both the *consumer* and the
+*provider*.
 
 
 Indices and tables
