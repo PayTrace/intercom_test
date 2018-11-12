@@ -13,6 +13,7 @@
 # limitations under the License.
 
 """Intercomponent Testing (Interface by Example)
+***************************************************
 
 The main functionality of this package is accessible through
 :class:`.InterfaceCaseProvider`.  :class:`.CaseAugmenter` and it's predefined
