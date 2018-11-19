@@ -40,7 +40,6 @@ setup(
         "Intended Audience :: Developers",
         "Intended Audience :: Information Technology",
         "Intended Audience :: Other Audience",
-        "Intended Audience :: Quality Assurance",
         "Topic :: Software Development :: Testing",
     ],
 )
