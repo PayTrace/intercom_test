@@ -5,6 +5,8 @@ This package provides Python tools to facilitate _Interface by Example_ programm
 
 Test case data is stored in YAML to provide the widest possible access by tools and programming languages while still being friendly to the humans who often need to manually manipulate it.
 
+Package documentation is available at [Read the Docs][docs].
+
 ## Interface by Example
 
 Integration testing has developed a reputation as a gigantic money- and time-suck occurring near the end of a project.  Software components are built _to specification_ in isolation from one another then, near the end of the project, stood up in an actual environment to finally talk to one another.  Inevitably, the two components disagreed on the proper interpretation of some aspect of specifications (think of NASA's lost Mars orbiter), leading to miscommunication or misdesign.  Though the very end of the project is not the best time to discover a need for significant changes, as there is limited opportunity to trade out lower-priority work for the changes required for successful integration, this is exactly when such issues will be discovered.
@@ -74,3 +76,5 @@ PayTrace uses *intercom_test* for coordinating testing of protocols between our 
 ## TL; DR
 
 This package allows a cheaper version of integration tests to run as part of unit testing.  It reads and maintains the data files necessary for this style of testing.  Service providers and consumers maintain parity by testing with the same test cases.
+
+[docs]: https://intercom-test.readthedocs.io/en/latest/
