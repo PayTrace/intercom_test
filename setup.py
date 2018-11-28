@@ -20,7 +20,7 @@ with open("README.md", "r") as readme:
 setup(
     name='intercom_test',
     url='https://github.com/PayTrace/intercom_test',
-    version='1.0dev',
+    version='1.0.0',
     package_dir={'': 'lib'},
     packages=find_packages('lib'),
     use_2to3=False,
