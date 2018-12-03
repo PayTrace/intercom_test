@@ -48,11 +48,13 @@ class InterfaceCaseProvider:
     
     Use an instance of this class to:
     
-    * Generate test case data :class:`dict`s
+    * Generate test case data :class:`dict`\ s
     * Decorate the case runner function (if auto-updating of compact
       augmentation data files is desired)
     * Merge extension test case files to the main test case file
     * Other case augmentation management tasks
+    
+    .. automethod:: __init__
     """
     class _UpdateState(Enum):
         not_requested   = '-'
@@ -111,7 +113,7 @@ class InterfaceCaseProvider:
         return extension_files(self.spec_dir, self.group_name)
     
     def cases(self, ):
-        """Generates :class:`dict`s of test case data
+        """Generates :class:`dict`\ s of test case data
         
         This method reads test cases from the group's main test case file
         and auxiliary files, possibly extending them with augmented data (if
@@ -287,6 +289,8 @@ class CaseAugmenter:
     this class's functionality, derive from it and define this constant in
     the subclass.  Two basic subclasses are defined in this module:
     :class:`HTTPCaseAugmenter` and :class:`RPCCaseAugmenter`.
+    
+    .. automethod:: __init__
     """
     UPDATE_FILE_EXT = ".update" + YAML_EXT
     
