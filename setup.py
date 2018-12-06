@@ -19,7 +19,8 @@ with open("README.md", "r") as readme:
 
 setup(
     name='intercom_test',
-    version='1.0dev',
+    url='https://github.com/PayTrace/intercom_test',
+    version='1.0.0',
     package_dir={'': 'lib'},
     packages=find_packages('lib'),
     use_2to3=False,
@@ -40,7 +41,6 @@ setup(
         "Intended Audience :: Developers",
         "Intended Audience :: Information Technology",
         "Intended Audience :: Other Audience",
-        "Intended Audience :: Quality Assurance",
         "Topic :: Software Development :: Testing",
     ],
 )
