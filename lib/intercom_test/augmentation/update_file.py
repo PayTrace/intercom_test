@@ -179,7 +179,7 @@ class Indexer:
             )
         )
 
-def index(paths, key_fields):
+def index(paths, key_fields, *, safe_loading=True):
     result = {}
     indexer = Indexer(key_fields)
     for path in paths:
@@ -190,6 +190,7 @@ def index(paths, key_fields):
                 if entry is not None:
                     case_key, offset = entry
                     new_augmenter = TestCaseAugmenter(path, offset, key_fields, case_index=next(case_index))
+                    new_augmenter.safe_loading = safe_loading
                     if case_key in result and result[case_key].file_path != path:
                         raise MultipleAugmentationEntriesError(
                             "case {} conflicts with case {}".format(
@@ -276,6 +277,11 @@ class CaseReader:
 
 class TestCaseAugmenter:
     """Callable to augment a test case from an update file entry"""
+    
+    # Set this to False to allow arbitrary object instantiation and code
+    # execution from loaded YAML
+    safe_loading = True
+    
     def __init__(self, file_path, offset, key_fields, *, case_index=None):
         super().__init__()
         self.file_path = file_path
@@ -286,7 +292,7 @@ class TestCaseAugmenter:
     def __call__(self, d):
         with open(self.file_path) as stream:
             if self.offset is None:
-                for k, v in yaml.safe_load(stream)[self.case_index].items():
+                for k, v in self._load_yaml(stream)[self.case_index].items():
                     d.setdefault(k, v)
             else:
                 CaseReader(stream, self.offset, self.key_fields).augment(d)
@@ -305,7 +311,7 @@ class TestCaseAugmenter:
     def case_data_events(self, ):
         with open(self.file_path) as stream:
             if self.offset is None:
-                augmentation_data = yaml.safe_load(stream)[self.case_index]
+                augmentation_data = self._load_yaml(stream)[self.case_index]
                 for k in self.key_fields:
                     augmentation_data.pop(k, None)
                 events = list(_yaml_content_events(augmentation_data))[1:-1]
@@ -316,3 +322,7 @@ class TestCaseAugmenter:
                     self.offset,
                     self.key_fields,
                 ).augmentation_data_events()
+    
+    def _load_yaml(self, stream):
+        load_yaml = yaml.safe_load if self.safe_loading else yaml.load
+        return load_yaml(stream)

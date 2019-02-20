@@ -294,6 +294,10 @@ class CaseAugmenter:
     """
     UPDATE_FILE_EXT = ".update" + YAML_EXT
     
+    # Set this to False to allow arbitrary object instantiation and code
+    # execution from loaded YAML
+    safe_loading = True
+    
     def __init__(self, augmentation_data_dir):
         """Constructing an instance
         
@@ -322,6 +326,7 @@ class CaseAugmenter:
             if case_key in self._case_augmenters:
                 self._excessive_augmentation_data(case_key, self._case_augmenters[case_key].file_path, file_path)
             self._case_augmenters[case_key] = CompactFileAugmenter(file_path, start_byte, case_key)
+            self._case_augmenters[case_key].safe_loading = self.safe_loading
     
     def _excessive_augmentation_data(self, case_key, file1, file2):
         if file1 == file2:
@@ -338,7 +343,7 @@ class CaseAugmenter:
         raise MultipleAugmentationEntriesError(error_msg)
     
     def _index_working_files(self, working_files):
-        for case_key, augmenter in update_file.index(working_files, self.CASE_PRIMARY_KEYS).items():
+        for case_key, augmenter in update_file.index(working_files, self.CASE_PRIMARY_KEYS, safe_loading=self.safe_loading).items():
             existing_augmenter = self._case_augmenters.get(case_key)
             if isinstance(existing_augmenter, CompactFileAugmenter):
                 if augmenter.deposit_file_path != existing_augmenter.file_path:
