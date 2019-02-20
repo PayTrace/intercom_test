@@ -154,7 +154,7 @@ def augment_dict_from(d, file_ref, case_key):
     file, start_byte = file_ref
     with open(file) as stream:
         if start_byte is None:
-            for k, v in yaml.load(stream)[case_key].items():
+            for k, v in yaml.safe_load(stream)[case_key].items():
                 d.setdefault(k, v)
         else:
             DataValueReader(stream, start_byte, case_key).augment(d)
@@ -170,7 +170,7 @@ class TestCaseAugmenter:
     def __call__(self, d):
         with open(self.file_path) as stream:
             if self.offset is None:
-                for k, v in yaml.load(stream)[self.case_key].items():
+                for k, v in yaml.safe_load(stream)[self.case_key].items():
                     d.setdefault(k, v)
             else:
                 DataValueReader(stream, self.offset, self.case_key).augment(d)
@@ -178,7 +178,7 @@ class TestCaseAugmenter:
     def case_data_events(self, ):
         with open(self.file_path) as stream:
             if self.offset is None:
-                augmentation_data = yaml.load(stream)[self.case_key]
+                augmentation_data = yaml.safe_load(stream)[self.case_key]
                 events = list(_yaml_content_events(augmentation_data))[1:-1]
                 yield from events
             else:

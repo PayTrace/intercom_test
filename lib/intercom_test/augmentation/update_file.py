@@ -286,7 +286,7 @@ class TestCaseAugmenter:
     def __call__(self, d):
         with open(self.file_path) as stream:
             if self.offset is None:
-                for k, v in yaml.load(stream)[self.case_index].items():
+                for k, v in yaml.safe_load(stream)[self.case_index].items():
                     d.setdefault(k, v)
             else:
                 CaseReader(stream, self.offset, self.key_fields).augment(d)
@@ -305,7 +305,7 @@ class TestCaseAugmenter:
     def case_data_events(self, ):
         with open(self.file_path) as stream:
             if self.offset is None:
-                augmentation_data = yaml.load(stream)[self.case_index]
+                augmentation_data = yaml.safe_load(stream)[self.case_index]
                 for k in self.key_fields:
                     augmentation_data.pop(k, None)
                 events = list(_yaml_content_events(augmentation_data))[1:-1]

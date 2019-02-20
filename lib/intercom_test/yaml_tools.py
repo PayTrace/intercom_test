@@ -82,5 +82,5 @@ def value_from_event_stream(content_events):
             break
     events.extend([yaml.DocumentEndEvent(), yaml.StreamEndEvent()])
     node = yaml.compose(events, Loader=EventsToNodes)
-    node_constructor = yaml.constructor.Constructor()
+    node_constructor = yaml.constructor.SafeConstructor()
     return node_constructor.construct_object(node, True)
