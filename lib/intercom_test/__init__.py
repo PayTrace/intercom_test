@@ -32,3 +32,4 @@ from .framework import (
     RPCCaseAugmenter,
 )
 from .json_asn1.types import ASN1_SOURCE as JSON_ASN1_SOURCE
+from .version import __version__

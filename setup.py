@@ -17,10 +17,14 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as readme:
     long_description = readme.read()
 
+ver_info = {}
+with open('lib/intercom_test/version.py') as vf:
+    exec(vf.read(), ver_info)
+
 setup(
     name='intercom_test',
     url='https://github.com/PayTrace/intercom_test',
-    version='1.0.0',
+    version=ver_info['__version__'],
     package_dir={'': 'lib'},
     packages=find_packages('lib'),
     use_2to3=False,
