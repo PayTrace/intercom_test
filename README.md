@@ -63,6 +63,12 @@ The simplest organization of the shared test case data (i.e. the request/respons
 
 This essentially means distributing the test cases through multiple files.  *intercom_test* provides facilities for organizing test cases in multiple files and combining them in a predictable, mergeable way as and when desired.
 
+
+## CVE-2017-18342
+
+This package allows the latest major released version of *PyYAML* at the time of publication, 3.13.  The PyYAML team has long debated a breaking change to make `yaml.load` a "safe" operation vs. it's current arbitrary code execution vulnerability.  *intercom_test* supports `safe_loading` in several places (as a keyword argument or an object property) -- defaulting to `True` -- to allow reversion to vulnerable behavior for any client code choosing that burden.  By default, *intercom_test* now only uses "safe" YAML loading.  Unfortunately, until a new major version of *PyYAML* is released addressing the default-unsafe API indicated by this CVE, *intercom_test* cannot publish a version compatible with the new API.
+
+
 ## Contributing
 
 1. Fork it ( https://github.com/PayTrace/intercom_test )
