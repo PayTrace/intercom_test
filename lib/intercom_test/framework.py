@@ -247,9 +247,9 @@ def data_files(dir_path):
 
 def _parse_json_bodies(test_case):
     if test_case.get('request type') == 'json':
-        test_case['request body'] = json.parse(test_case['request body'])
+        test_case['request body'] = json.loads(test_case['request body'])
     if test_case.get('response type') == 'json':
-        test_case['response body'] = json.parse(test_case['response body'])
+        test_case['response body'] = json.loads(test_case['response body'])
 
 class CaseAugmenter:
     """Base class of case augmentation data managers
