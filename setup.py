@@ -41,9 +41,11 @@ setup(
     extras_require={
         'cli': ['docopt-subcommands>=3.0, <4', 'pick>=0.6.4, <1'],
     },
-    console_scripts=[
-        'icy-test = intercom_test.foreign:csmain [cli]'
-    ],
+    entry_points={
+        'console_scripts': [
+            'icy-test = intercom_test.foreign:csmain [cli]',
+        ],
+    },
     classifiers=[
         "Programming Language :: Python :: 3 :: Only",
         "License :: OSI Approved :: Apache Software License",
