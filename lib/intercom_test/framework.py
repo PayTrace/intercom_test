@@ -325,7 +325,7 @@ class CaseAugmenter:
         for case_key, start_byte in case_keys_in_compact_file(file_path):
             if case_key in self._case_augmenters:
                 self._excessive_augmentation_data(case_key, self._case_augmenters[case_key].file_path, file_path)
-            self._case_augmenters[case_key] = CompactFileAugmenter(file_path, start_byte, case_key)
+            self._case_augmenters[case_key] = CompactFileAugmenter(file_path, start_byte, case_key, safe_loading=self.safe_loading)
             self._case_augmenters[case_key].safe_loading = self.safe_loading
     
     def _excessive_augmentation_data(self, case_key, file1, file2):
@@ -436,7 +436,7 @@ class CaseAugmenter:
             case_augmenter.extend_updates('foo').with_current_augmentation(sys.stdin)
         
         """
-        return UpdateExtender(file_name_base, self)
+        return UpdateExtender(file_name_base, self, safe_loading=self.safe_loading)
     
     def _updated_compact_events(self, events, updates):
         mutator = CompactAugmentationUpdater(
@@ -502,8 +502,12 @@ class RPCCaseAugmenter(CaseAugmenter):
 
 
 class UpdateExtender:
-    def __init__(self, file_name_base, case_augmenter):
+    safe_loading = True
+    
+    def __init__(self, file_name_base, case_augmenter, *, safe_loading=None):
         super().__init__()
+        if safe_loading is not None and safe_loading is not self.safe_loading:
+            self.safe_loading = safe_loading
         self._file_name = os.path.join(
             case_augmenter.augmentation_data_dir,
             file_name_base + case_augmenter.UPDATE_FILE_EXT
@@ -535,7 +539,7 @@ class UpdateExtender:
             buffered_input.seek(0)
             stream = buffered_input
         
-        id_list_reader = CaseIdListReader(self._case_augmenter.CASE_PRIMARY_KEYS)
+        id_list_reader = CaseIdListReader(self._case_augmenter.CASE_PRIMARY_KEYS, safe_loading=self.safe_loading)
         for event in yaml.parse(stream):
             test_case = id_list_reader.read(event)
             if test_case is None:
