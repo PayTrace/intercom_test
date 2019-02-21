@@ -52,13 +52,18 @@ class Indexer:
     result: augmenting the case (or updating the compact augmentation file)
     requires reloading the entire YAML file, not just the single case.
     """
+    
+    safe_loading = True
+    
     @def_enum
     def State():
         return "header top_sequence case_mapping case_data_key_collection case_data_value case_data_value_collection tail"
     
-    def __init__(self, key_fields):
+    def __init__(self, key_fields, *, safe_loading=None):
         super().__init__()
         # instance init code
+        if safe_loading is not None and safe_loading is not self.safe_loading:
+            self.safe_loading = safe_loading
         self.key_fields = frozenset(key_fields)
         self._state = self.State.header
         self._index = {}
@@ -118,7 +123,7 @@ class Indexer:
         
         if self._depth < 0:
             self._state = self.State.case_data_value
-            self._case_data_key = _value_from_events(self._case_data_key)
+            self._case_data_key = _value_from_events(self._case_data_key, safe_loading=self.safe_loading)
     
     def _read_from_case_data_value(self, event):
         if isinstance(event, yaml.CollectionStartEvent):
@@ -127,7 +132,7 @@ class Indexer:
             self._case_data_value = [event]
         else:
             self._expect(yaml.ScalarEvent)
-            self._case_data_value = _value_from_events((event,))
+            self._case_data_value = _value_from_events((event,), safe_loading=self.safe_loading)
             self._state = self.State.case_mapping
             self._capture_case_item()
     
@@ -140,7 +145,7 @@ class Indexer:
         
         if self._depth < 0:
             self._state = self.State.case_mapping
-            self._case_data_value = _value_from_events(self._case_data_value)
+            self._case_data_value = _value_from_events(self._case_data_value, safe_loading=self.safe_loading)
             self._capture_case_item()
     
     def _read_from_tail(self, event):
@@ -179,9 +184,9 @@ class Indexer:
             )
         )
 
-def index(paths, key_fields):
+def index(paths, key_fields, *, safe_loading=True):
     result = {}
-    indexer = Indexer(key_fields)
+    indexer = Indexer(key_fields, safe_loading=safe_loading)
     for path in paths:
         case_index = itertools.count(0)
         with open(path) as instream:
@@ -189,7 +194,8 @@ def index(paths, key_fields):
                 entry = indexer.read(event)
                 if entry is not None:
                     case_key, offset = entry
-                    new_augmenter = TestCaseAugmenter(path, offset, key_fields, case_index=next(case_index))
+                    new_augmenter = TestCaseAugmenter(path, offset, key_fields, case_index=next(case_index), safe_loading=safe_loading)
+                    new_augmenter.safe_loading = safe_loading
                     if case_key in result and result[case_key].file_path != path:
                         raise MultipleAugmentationEntriesError(
                             "case {} conflicts with case {}".format(
@@ -208,12 +214,16 @@ class CaseReader:
     """
     TRAILING_WS = re.compile('\\s+\n')
     
+    safe_loading = True
+    
     @def_enum
     def State():
         return "key value"
     
-    def __init__(self, stream, start_byte, key_fields):
+    def __init__(self, stream, start_byte, key_fields, *, safe_loading=None):
         super().__init__()
+        if safe_loading is not None and safe_loading is not self.safe_loading:
+            self.safe_loading = safe_loading
         self.key_fields = frozenset(key_fields)
         stream.seek(start_byte)
         self._events = yaml.parse(stream)
@@ -237,14 +247,14 @@ class CaseReader:
     
     def augment(self, d):
         for k_events, v_events in self._content_item_events():
-            k = _value_from_events(k_events)
+            k = _value_from_events(k_events, safe_loading=self.safe_loading)
             if k in self.key_fields:
                 continue
-            d.setdefault(k, _value_from_events(v_events))
+            d.setdefault(k, _value_from_events(v_events), safe_loading=self.safe_loading)
     
     def augmentation_data_events(self, ):
         for k_events, v_events in self._content_item_events():
-            k = _value_from_events(k_events)
+            k = _value_from_events(k_events, safe_loading=self.safe_loading)
             if k not in self.key_fields:
                 yield from k_events
                 yield from v_events
@@ -276,8 +286,15 @@ class CaseReader:
 
 class TestCaseAugmenter:
     """Callable to augment a test case from an update file entry"""
-    def __init__(self, file_path, offset, key_fields, *, case_index=None):
+    
+    # Set this to False to allow arbitrary object instantiation and code
+    # execution from loaded YAML
+    safe_loading = True
+    
+    def __init__(self, file_path, offset, key_fields, *, case_index=None, safe_loading=None):
         super().__init__()
+        if safe_loading is not None and safe_loading is not self.safe_loading:
+            self.safe_loading = safe_loading
         self.file_path = file_path
         self.offset = offset
         self.key_fields = key_fields
@@ -286,10 +303,10 @@ class TestCaseAugmenter:
     def __call__(self, d):
         with open(self.file_path) as stream:
             if self.offset is None:
-                for k, v in yaml.load(stream)[self.case_index].items():
+                for k, v in self._load_yaml(stream)[self.case_index].items():
                     d.setdefault(k, v)
             else:
-                CaseReader(stream, self.offset, self.key_fields).augment(d)
+                CaseReader(stream, self.offset, self.key_fields, safe_loading=self.safe_loading).augment(d)
     
     @property
     def case_reference(self):
@@ -305,7 +322,7 @@ class TestCaseAugmenter:
     def case_data_events(self, ):
         with open(self.file_path) as stream:
             if self.offset is None:
-                augmentation_data = yaml.load(stream)[self.case_index]
+                augmentation_data = self._load_yaml(stream)[self.case_index]
                 for k in self.key_fields:
                     augmentation_data.pop(k, None)
                 events = list(_yaml_content_events(augmentation_data))[1:-1]
@@ -315,4 +332,9 @@ class TestCaseAugmenter:
                     stream,
                     self.offset,
                     self.key_fields,
+                    safe_loading=self.safe_loading,
                 ).augmentation_data_events()
+    
+    def _load_yaml(self, stream):
+        load_yaml = yaml.safe_load if self.safe_loading else yaml.load
+        return load_yaml(stream)

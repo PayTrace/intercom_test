@@ -99,9 +99,14 @@ class DataValueReader:
     into the stream and the test case key located at that offset.  This allows
     the reader to skip directly to that case and process only that case.
     """
-    def __init__(self, stream, start_byte, case_key):
+    
+    safe_loading = True
+    
+    def __init__(self, stream, start_byte, case_key, *, safe_loading=None):
         super().__init__()
         # instance init code
+        if safe_loading is not None and safe_loading is not self.safe_loading:
+            self.safe_loading = safe_loading
         stream.seek(start_byte)
         self._events = yaml.parse(stream)
         next(self._events) # should be yaml.StreamStartEvent
@@ -122,13 +127,14 @@ class DataValueReader:
             # If *next_event* doesn't end the mapping, we have to chain it
             # in front of *self._events* to read the key
             key = _yaml_value_from_events(
-                itertools.chain((next_event,), self._events)
+                itertools.chain((next_event,), self._events),
+                safe_loading=self.safe_loading
             )
             value = self._get_value()
             d.setdefault(key, value)
     
     def _get_value(self, ):
-        return _yaml_value_from_events(self._events)
+        return _yaml_value_from_events(self._events, safe_loading=self.safe_loading)
     
     def augmentation_data_events(self, ):
         depth = 0
@@ -150,19 +156,27 @@ def case_keys(data_file):
     
     return reader.case_keys
 
-def augment_dict_from(d, file_ref, case_key):
+def augment_dict_from(d, file_ref, case_key, *, safe_loading=True):
     file, start_byte = file_ref
+    load_yaml = yaml.safe_load if safe_loading else yaml.load
     with open(file) as stream:
         if start_byte is None:
-            for k, v in yaml.load(stream)[case_key].items():
+            for k, v in load_yaml(stream)[case_key].items():
                 d.setdefault(k, v)
         else:
-            DataValueReader(stream, start_byte, case_key).augment(d)
+            DataValueReader(stream, start_byte, case_key, safe_loading=safe_loading).augment(d)
 
 class TestCaseAugmenter:
     """Callable to augment a test case from a compact entry"""
-    def __init__(self, file_path, offset, case_key):
+    
+    # Set this to False to allow arbitrary object instantiation and code
+    # execution from loaded YAML
+    safe_loading = True
+    
+    def __init__(self, file_path, offset, case_key, *, safe_loading=None):
         super().__init__()
+        if safe_loading is not None and safe_loading is not self.safe_loading:
+            self.safe_loading = safe_loading
         self.file_path = file_path
         self.offset = offset
         self.case_key = case_key
@@ -170,15 +184,15 @@ class TestCaseAugmenter:
     def __call__(self, d):
         with open(self.file_path) as stream:
             if self.offset is None:
-                for k, v in yaml.load(stream)[self.case_key].items():
+                for k, v in self._load_yaml(stream)[self.case_key].items():
                     d.setdefault(k, v)
             else:
-                DataValueReader(stream, self.offset, self.case_key).augment(d)
+                DataValueReader(stream, self.offset, self.case_key, safe_loading=self.safe_loading).augment(d)
     
     def case_data_events(self, ):
         with open(self.file_path) as stream:
             if self.offset is None:
-                augmentation_data = yaml.load(stream)[self.case_key]
+                augmentation_data = self._load_yaml(stream)[self.case_key]
                 events = list(_yaml_content_events(augmentation_data))[1:-1]
                 yield from events
             else:
@@ -186,7 +200,12 @@ class TestCaseAugmenter:
                     stream,
                     self.offset,
                     self.case_key,
+                    safe_loading=self.safe_loading,
                 ).augmentation_data_events()
+    
+    def _load_yaml(self, stream):
+        load_yaml = yaml.safe_load if self.safe_loading else yaml.load
+        return load_yaml(stream)
 
 class Updater:
     """YAML event-stream editor for compact augumentation data files
