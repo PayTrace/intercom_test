@@ -54,8 +54,16 @@ class InterfaceCaseProvider:
     * Merge extension test case files to the main test case file
     * Other case augmentation management tasks
     
+    Setting :attr:`use_body_type_magic` to ``True`` automatically parses the
+    ``"request body"`` value as JSON if ``"request type"`` in the same test
+    case is ``"json"``, and similarly for ``"response body"`` and
+    ``"response type"``.
+    
     .. automethod:: __init__
     """
+    
+    use_body_type_magic = False
+    
     class _UpdateState(Enum):
         not_requested   = '-'
         requested       = '?'
@@ -218,7 +226,8 @@ class InterfaceCaseProvider:
                 for case_set in yaml.load_all(file)
                 for tc in case_set
             ):
-                _parse_json_bodies(test_case)
+                if self.use_body_type_magic:
+                    _parse_json_bodies(test_case)
                 yield self._augmented_case(test_case)
 
 def extension_files(spec_dir, group_name):
@@ -247,9 +256,9 @@ def data_files(dir_path):
 
 def _parse_json_bodies(test_case):
     if test_case.get('request type') == 'json':
-        test_case['request body'] = json.parse(test_case['request body'])
+        test_case['request body'] = json.loads(test_case['request body'])
     if test_case.get('response type') == 'json':
-        test_case['response body'] = json.parse(test_case['response body'])
+        test_case['response body'] = json.loads(test_case['response body'])
 
 class CaseAugmenter:
     """Base class of case augmentation data managers
