@@ -54,4 +54,12 @@ another process and/or language.  The augmentation data changes embodied in the
 ``icy-test commitupdates``.
 
 
+Merging Interface Extension Test Cases To Main File
+---------------------------------------------------
+
+Use the ``icy-test mergecases`` subcommand to invoke
+:py:meth:`intercom_test.framework.InterfaceCaseProvider.merge_test_extensions`
+with appropriate setup taken from the ``icy-test`` configuration file.
+
+
 .. _JSON Lines: http://jsonlines.org

@@ -240,6 +240,24 @@ def commit_updates(options):
     )
     case_provider.update_compact_files()
 
+@subcommand()
+def merge_cases(options):
+    """usage: {program} mergecases [options]
+    
+    Merge all extension test case files into the main test case for for the
+    service.
+    
+    Options:
+        -c CONFFILE, --config CONFFILE      path to configuration file
+    """
+    config = Config(options.get('--config'))
+    
+    case_provider = framework.InterfaceCaseProvider(
+        config.interface_dir,
+        config.service_name,
+    )
+    case_provider.merge_test_extensions()
+
 def csmain():
     main(sys.argv[0], _package_version)
 
