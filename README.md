@@ -63,6 +63,12 @@ The simplest organization of the shared test case data (i.e. the request/respons
 
 This essentially means distributing the test cases through multiple files.  *intercom_test* provides facilities for organizing test cases in multiple files and combining them in a predictable, mergeable way as and when desired.
 
+
+## Command Line Interface (`[cli]` Extra)
+
+When this package is installed with the `[cli]` extra, it makes a command line tool called `icy-test` available to access the core functionality of `intercom_test`, facilitating use of this functionality in languages other than Python.  Help on use of the tool can be obtained by running `icy-test --help`.
+
+
 ## Contributing
 
 1. Fork it ( https://github.com/PayTrace/intercom_test )
