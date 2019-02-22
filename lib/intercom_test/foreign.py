@@ -10,7 +10,7 @@ try:
     from docopt_subcommands import command as subcommand, main
     from pick import Picker, pick
 except ImportError:
-    def main():
+    def main(*args):
         print("Please install with '[cli]' extra (e.g. pip install {}[cli])".format(_package))
     
     def subcommand():
