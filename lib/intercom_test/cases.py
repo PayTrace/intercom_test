@@ -51,12 +51,17 @@ class IdentificationListReader:
     :func:`hash_from_fields`) and the YAML event stream for the key/value pairs
     (to preserve as much format from the source file) are needed.
     """
+    
+    safe_loading = True
+    
     @def_enum
     def State():
         return "header content tail"
     
-    def __init__(self, key_fields):
+    def __init__(self, key_fields, *, safe_loading=None):
         super().__init__()
+        if safe_loading is not None and safe_loading is not self.safe_loading:
+            self.safe_loading = safe_loading
         self._key_fields = frozenset(key_fields)
         self._state = self.State.header
     
@@ -124,7 +129,7 @@ class IdentificationListReader:
         pass
     
     def _key_from_events(self, events):
-        given_values = _value_from_events(events)
+        given_values = _value_from_events(events, safe_loading=self.safe_loading)
         return hash_from_fields(dict(
             entry for entry in given_values.items()
             if entry[0] in self._key_fields

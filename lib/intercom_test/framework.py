@@ -54,8 +54,16 @@ class InterfaceCaseProvider:
     * Merge extension test case files to the main test case file
     * Other case augmentation management tasks
     
+    Setting :attr:`use_body_type_magic` to ``True`` automatically parses the
+    ``"request body"`` value as JSON if ``"request type"`` in the same test
+    case is ``"json"``, and similarly for ``"response body"`` and
+    ``"response type"``.
+    
     .. automethod:: __init__
     """
+    
+    use_body_type_magic = False
+    
     class _UpdateState(Enum):
         not_requested   = '-'
         requested       = '?'
@@ -218,7 +226,8 @@ class InterfaceCaseProvider:
                 for case_set in yaml.load_all(file)
                 for tc in case_set
             ):
-                _parse_json_bodies(test_case)
+                if self.use_body_type_magic:
+                    _parse_json_bodies(test_case)
                 yield self._augmented_case(test_case)
 
 def extension_files(spec_dir, group_name):
@@ -247,9 +256,9 @@ def data_files(dir_path):
 
 def _parse_json_bodies(test_case):
     if test_case.get('request type') == 'json':
-        test_case['request body'] = json.parse(test_case['request body'])
+        test_case['request body'] = json.loads(test_case['request body'])
     if test_case.get('response type') == 'json':
-        test_case['response body'] = json.parse(test_case['response body'])
+        test_case['response body'] = json.loads(test_case['response body'])
 
 class CaseAugmenter:
     """Base class of case augmentation data managers
@@ -294,6 +303,10 @@ class CaseAugmenter:
     """
     UPDATE_FILE_EXT = ".update" + YAML_EXT
     
+    # Set this to False to allow arbitrary object instantiation and code
+    # execution from loaded YAML
+    safe_loading = True
+    
     def __init__(self, augmentation_data_dir):
         """Constructing an instance
         
@@ -321,7 +334,8 @@ class CaseAugmenter:
         for case_key, start_byte in case_keys_in_compact_file(file_path):
             if case_key in self._case_augmenters:
                 self._excessive_augmentation_data(case_key, self._case_augmenters[case_key].file_path, file_path)
-            self._case_augmenters[case_key] = CompactFileAugmenter(file_path, start_byte, case_key)
+            self._case_augmenters[case_key] = CompactFileAugmenter(file_path, start_byte, case_key, safe_loading=self.safe_loading)
+            self._case_augmenters[case_key].safe_loading = self.safe_loading
     
     def _excessive_augmentation_data(self, case_key, file1, file2):
         if file1 == file2:
@@ -338,7 +352,7 @@ class CaseAugmenter:
         raise MultipleAugmentationEntriesError(error_msg)
     
     def _index_working_files(self, working_files):
-        for case_key, augmenter in update_file.index(working_files, self.CASE_PRIMARY_KEYS).items():
+        for case_key, augmenter in update_file.index(working_files, self.CASE_PRIMARY_KEYS, safe_loading=self.safe_loading).items():
             existing_augmenter = self._case_augmenters.get(case_key)
             if isinstance(existing_augmenter, CompactFileAugmenter):
                 if augmenter.deposit_file_path != existing_augmenter.file_path:
@@ -431,7 +445,7 @@ class CaseAugmenter:
             case_augmenter.extend_updates('foo').with_current_augmentation(sys.stdin)
         
         """
-        return UpdateExtender(file_name_base, self)
+        return UpdateExtender(file_name_base, self, safe_loading=self.safe_loading)
     
     def _updated_compact_events(self, events, updates):
         mutator = CompactAugmentationUpdater(
@@ -497,8 +511,12 @@ class RPCCaseAugmenter(CaseAugmenter):
 
 
 class UpdateExtender:
-    def __init__(self, file_name_base, case_augmenter):
+    safe_loading = True
+    
+    def __init__(self, file_name_base, case_augmenter, *, safe_loading=None):
         super().__init__()
+        if safe_loading is not None and safe_loading is not self.safe_loading:
+            self.safe_loading = safe_loading
         self._file_name = os.path.join(
             case_augmenter.augmentation_data_dir,
             file_name_base + case_augmenter.UPDATE_FILE_EXT
@@ -530,7 +548,7 @@ class UpdateExtender:
             buffered_input.seek(0)
             stream = buffered_input
         
-        id_list_reader = CaseIdListReader(self._case_augmenter.CASE_PRIMARY_KEYS)
+        id_list_reader = CaseIdListReader(self._case_augmenter.CASE_PRIMARY_KEYS, safe_loading=self.safe_loading)
         for event in yaml.parse(stream):
             test_case = id_list_reader.read(event)
             if test_case is None:
