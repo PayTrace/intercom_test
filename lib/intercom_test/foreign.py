@@ -53,10 +53,11 @@ class DirPicker(Menu):
     
     selected_path = None
     
-    def __init__(self, what_for, start_dir='.'):
+    def __init__(self, what_for, start_dir='.', *, valid=None):
         super().__init__(what_for)
         self.start_dir = start_dir
         self.rel_path = '.'
+        self._is_valid = valid or _true
         def reset_to_start(picker):
             self.rel_path = '.'
             return '.', -1
@@ -100,7 +101,14 @@ class DirPicker(Menu):
         for e in os.listdir(current_dir):
             (dirs if os.path.isdir(os.path.join(current_dir, e)) else files).append(e)
         
-        return [self.SELECTION_OPTION, ".."] + sorted(dirs)
+        meta_options = []
+        if self._is_valid(current_dir):
+            meta_options.append(self.SELECTION_OPTION)
+        meta_options.append("..")
+        return meta_options + sorted(dirs)
+
+def _true(*args, **kwargs):
+    return True
 
 class Config(object):
     """Configuration for command line interface"""
@@ -135,10 +143,10 @@ class Config(object):
     @classmethod
     def build_with_cui(cls, filepath):
         start_dir = os.path.dirname(filepath)
-        ifcs_dir = DirPicker("Interfaces Directory", start_dir).run()
-        if ifcs_dir is None:
+        ifcs_relpath = DirPicker("Interfaces Directory", start_dir, valid=cls._yaml_files_in_dir).run()
+        if ifcs_relpath is None:
             return False
-        svc_name = Menu("Service Name").run(cls._yaml_files_in_dir(ifcs_dir))
+        svc_name = Menu("Service Name").run(cls._yaml_files_in_dir(os.path.join(start_dir, ifcs_relpath)))
         if svc_name is None:
             return False
         
@@ -152,7 +160,7 @@ class Config(object):
         
         with open(filepath, 'w') as cfgfile:
             w = lambda *args, **kwargs: print(*args, file=cfgfile, **kwargs)
-            w("interfaces: " + cls._yaml_str(ifcs_dir))
+            w("interfaces: " + cls._yaml_str(ifcs_relpath))
             w("service name: " + cls._yaml_str(svc_name))
             if augdata_dir is not None:
                 w()
