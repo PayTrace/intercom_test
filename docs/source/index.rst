@@ -11,6 +11,7 @@ Welcome to intercom_test's documentation!
    :caption: Contents:
    
    modules
+   icy-test
 
 
 Using This Package
@@ -26,6 +27,11 @@ from a different directory to any test case; this supports decoupling a *service
 provider's* implementation details necessary to passing the given test case from
 the request and response information needed by both the *consumer* and the
 *provider*.
+
+:py:mod:`intercom_test`, when installed with the ``[cli]`` *extra*, also
+provides a command line tool called ``icy-test``.  This tool makes the core
+functionality of :py:mod:`intercom_test` available to programs written in languages
+other than Python.
 
 
 What It Looks Like In Practice

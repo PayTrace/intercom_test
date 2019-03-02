@@ -63,7 +63,7 @@ class EventsToNodes(yaml.composer.Composer, yaml.resolver.Resolver):
     def dispose(self):
         pass
 
-def value_from_event_stream(content_events):
+def value_from_event_stream(content_events, *, safe_loading=True):
     """Convert an iterable of YAML events to a Pythonic value
     
     The *content_events* MUST NOT include stream or document events.
@@ -82,5 +82,9 @@ def value_from_event_stream(content_events):
             break
     events.extend([yaml.DocumentEndEvent(), yaml.StreamEndEvent()])
     node = yaml.compose(events, Loader=EventsToNodes)
-    node_constructor = yaml.constructor.Constructor()
+    node_constructor = (
+        yaml.constructor.SafeConstructor
+        if safe_loading else
+        yaml.constructor.Constructor
+    )()
     return node_constructor.construct_object(node, True)
