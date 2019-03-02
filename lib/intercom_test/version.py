@@ -24,7 +24,7 @@ class VersionInfo:
     
     def _compute_status(self, ):
         subp = subprocess
-        if self.git_dir and os.path.exists(self.git_dir):
+        if '+' not in self.base_version and self.git_dir and os.path.exists(self.git_dir):
             self.version_unknown = self.get_version_unknown()
             self.modified = self.get_modified_status()
         else:
