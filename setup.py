@@ -17,8 +17,8 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as readme:
     long_description = readme.read()
 
-ver_info = {}
-with open('lib/intercom_test/version.py') as vf:
+ver_info = {'__file__': 'lib/intercom_test/version.py'}
+with open(ver_info['__file__']) as vf:
     exec(vf.read(), ver_info)
 
 setup(

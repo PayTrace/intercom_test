@@ -250,7 +250,7 @@ class CaseReader:
             k = _value_from_events(k_events, safe_loading=self.safe_loading)
             if k in self.key_fields:
                 continue
-            d.setdefault(k, _value_from_events(v_events), safe_loading=self.safe_loading)
+            d.setdefault(k, _value_from_events(v_events, safe_loading=self.safe_loading))
     
     def augmentation_data_events(self, ):
         for k_events, v_events in self._content_item_events():
