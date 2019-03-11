@@ -1,4 +1,4 @@
-_nominal_version = "2.0.0"
+_nominal_version = "2.0.1"
 
 import os.path
 import subprocess
