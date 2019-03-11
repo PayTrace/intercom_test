@@ -1,5 +1,12 @@
 # Change History of intercom_test
 
+## v2.0.1
+
+* Fixed a typo relating to safe loading of YAML in augmentation data update files.
+* Introduced semi-automated update of the package's `__version__`, adding a PEP 440-compliant _local version identifier_ indicating local changes; the main benefit to this is an inability to publish an improperly tagged/versioned revision (as PyPI doesn't accept packages with local version identifiers).
+
+---
+
 ## v2.0.0
 
 ### Breaking Changes
